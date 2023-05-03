@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:latest
+    volumes:
+      - /var/lib/postgresql/data/
+    restart: always
+    ports:
+        - "5433:5432"
+    environment:
+      - POSTGRES_DB=transportanimals
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=1234
+  transportanimals:
+    environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - DBHOST=db
+        - DBPORT=5432
+        - DBUSER=user
+        - DBPASSWORD=1234
+    ports:
+        - "5000:443"
+        - "8080:80"
+    image: ${DOCKER_REGISTRY-}transportanimals
+    build:
+      context: .
+      dockerfile: TransportAnimals/Dockerfile
+    depends_on:
+        - db
+  tests:
+    image: mrexpen/planet_olymp_phase2
+    pull_policy: always
+    ports:
+      - "8090:8080"
+    depends_on:
+      - transportanimals
+    environment:
+      SERVER_URL: http://transportanimals:80
+      STAGE: all
